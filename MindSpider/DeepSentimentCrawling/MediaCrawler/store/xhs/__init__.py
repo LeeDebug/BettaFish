@@ -16,6 +16,7 @@ from typing import List
 
 import config
 from var import source_keyword_var
+from tools import utils
 
 from .xhs_store_media import *
 from ._store_impl import *
@@ -143,6 +144,17 @@ async def update_xhs_note_comment(note_id: str, comment_item: Dict):
     comment_id = comment_item.get("id")
     comment_pictures = [item.get("url_default", "") for item in comment_item.get("pictures", [])]
     target_comment = comment_item.get("target_comment", {})
+    
+    # 将 sub_comment_count 转换为整数，因为数据库字段是 Integer 类型
+    sub_comment_count_raw = comment_item.get("sub_comment_count", 0)
+    try:
+        sub_comment_count = int(sub_comment_count_raw) if sub_comment_count_raw is not None else 0
+    except (ValueError, TypeError):
+        utils.logger.warning(
+            f"[store.xhs.update_xhs_note_comment] 无法将 sub_comment_count 转换为整数: {sub_comment_count_raw}, 类型: {type(sub_comment_count_raw)}, 使用默认值 0"
+        )
+        sub_comment_count = 0
+    
     local_db_item = {
         "comment_id": comment_id,  # 评论id
         "create_time": comment_item.get("create_time"),  # 评论时间
@@ -152,7 +164,7 @@ async def update_xhs_note_comment(note_id: str, comment_item: Dict):
         "user_id": user_info.get("user_id"),  # 用户id
         "nickname": user_info.get("nickname"),  # 用户昵称
         "avatar": user_info.get("image"),  # 用户头像
-        "sub_comment_count": comment_item.get("sub_comment_count", 0),  # 子评论数
+        "sub_comment_count": sub_comment_count,  # 子评论数（已转换为整数）
         "pictures": ",".join(comment_pictures),  # 评论图片
         "parent_comment_id": target_comment.get("id", 0),  # 父评论id
         "last_modify_ts": utils.get_current_timestamp(),  # 最后更新时间戳（MediaCrawler程序生成的，主要用途在db存储的时候记录一条记录最新更新时间）

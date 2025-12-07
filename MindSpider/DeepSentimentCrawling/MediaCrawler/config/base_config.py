@@ -9,8 +9,8 @@
 # 使用本代码即表示您同意遵守上述原则和LICENSE中的所有条款。
 
 # 基础配置
-PLATFORM = "ks"  # 平台，xhs | dy | ks | bili | wb | tieba | zhihu
-KEYWORDS = "咸鱼被骗,日本部署导弹,大湾区科学论坛,美国战略,劣迹网红,苹果,印度,公益项目,职场后悔,基金经理"  # 关键词搜索配置，以英文逗号分隔
+PLATFORM = "xhs"  # 平台，xhs | dy | ks | bili | wb | tieba | zhihu
+KEYWORDS = "数码圈,React,情感树洞,百度人名造假,混团世界杯,康方生物,证监会,鸿蒙NEXT,最忙五人组,程序员"  # 关键词搜索配置，以英文逗号分隔
 LOGIN_TYPE = "qrcode"  # qrcode or phone or cookie
 COOKIES = ""
 CRAWLER_TYPE = "search"  # 爬取类型，search(关键词搜索) | detail(帖子详情)| creator(创作者主页数据)

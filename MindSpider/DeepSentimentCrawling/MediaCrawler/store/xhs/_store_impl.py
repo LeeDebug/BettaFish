@@ -17,6 +17,7 @@ from database.models import XhsNote, XhsNoteComment, XhsCreator
 
 from tools.async_file_writer import AsyncFileWriter
 from tools.time_util import get_current_timestamp
+from tools import utils
 from var import crawler_type_var
 
 class XhsCsvStoreImplement(AbstractStore):
@@ -158,6 +159,17 @@ class XhsDbStoreImplement(AbstractStore):
     async def add_comment(self, session: AsyncSession, comment_item: Dict):
         add_ts = int(get_current_timestamp())
         last_modify_ts = int(get_current_timestamp())
+        
+        # 确保 sub_comment_count 是整数类型，因为数据库字段是 Integer
+        sub_comment_count_raw = comment_item.get("sub_comment_count", 0)
+        try:
+            sub_comment_count = int(sub_comment_count_raw) if sub_comment_count_raw is not None else 0
+        except (ValueError, TypeError):
+            utils.logger.warning(
+                f"[XhsDbStoreImplement.add_comment] 无法将 sub_comment_count 转换为整数: {sub_comment_count_raw}, 类型: {type(sub_comment_count_raw)}, 使用默认值 0"
+            )
+            sub_comment_count = 0
+        
         comment = XhsNoteComment(
             user_id=comment_item.get("user_id"),
             nickname=comment_item.get("nickname"),
@@ -169,7 +181,7 @@ class XhsDbStoreImplement(AbstractStore):
             create_time=comment_item.get("create_time"),
             note_id=comment_item.get("note_id"),
             content=comment_item.get("content"),
-            sub_comment_count=comment_item.get("sub_comment_count"),
+            sub_comment_count=sub_comment_count,
             pictures=json.dumps(comment_item.get("pictures")),
             parent_comment_id=comment_item.get("parent_comment_id"),
             like_count=str(comment_item.get("like_count"))
@@ -179,10 +191,21 @@ class XhsDbStoreImplement(AbstractStore):
     async def update_comment(self, session: AsyncSession, comment_item: Dict):
         comment_id = comment_item.get("comment_id")
         last_modify_ts = int(get_current_timestamp())
+        
+        # 确保 sub_comment_count 是整数类型，因为数据库字段是 Integer
+        sub_comment_count_raw = comment_item.get("sub_comment_count", 0)
+        try:
+            sub_comment_count = int(sub_comment_count_raw) if sub_comment_count_raw is not None else 0
+        except (ValueError, TypeError):
+            utils.logger.warning(
+                f"[XhsDbStoreImplement.update_comment] 无法将 sub_comment_count 转换为整数: {sub_comment_count_raw}, 类型: {type(sub_comment_count_raw)}, 使用默认值 0"
+            )
+            sub_comment_count = 0
+        
         update_data = {
             "last_modify_ts": last_modify_ts,
             "like_count": str(comment_item.get("like_count")),
-            "sub_comment_count": comment_item.get("sub_comment_count"),
+            "sub_comment_count": sub_comment_count,
         }
         stmt = update(XhsNoteComment).where(XhsNoteComment.comment_id == comment_id).values(**update_data)
         await session.execute(stmt)
