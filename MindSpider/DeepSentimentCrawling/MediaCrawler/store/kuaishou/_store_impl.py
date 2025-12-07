@@ -108,7 +108,20 @@ class KuaishouDbStoreImplement(AbstractStore):
         Args:
             comment_item: comment item dict
         """
-        comment_id = comment_item.get("comment_id")
+        comment_id_raw = comment_item.get("comment_id")
+        # 确保 comment_id 是整数类型，因为数据库字段是 BigInteger
+        # 这解决了 PostgreSQL 中 bigint 与 varchar 类型不匹配的问题
+        try:
+            comment_id = int(comment_id_raw) if comment_id_raw is not None else None
+        except (ValueError, TypeError):
+            utils.logger.error(
+                f"[KuaishouDbStoreImplement.store_comment] 无法将 comment_id 转换为整数: {comment_id_raw}, 类型: {type(comment_id_raw)}"
+            )
+            return  # 跳过无效的 comment_id
+        
+        # 更新 comment_item 中的 comment_id 为整数类型
+        comment_item["comment_id"] = comment_id
+        
         async with get_session() as session:
             result = await session.execute(
                 select(KuaishouVideoComment).where(KuaishouVideoComment.comment_id == comment_id))

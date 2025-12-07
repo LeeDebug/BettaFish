@@ -76,7 +76,17 @@ async def batch_update_ks_video_comments(video_id: str, comments: List[Dict]):
 
 
 async def update_ks_video_comment(video_id: str, comment_item: Dict):
-    comment_id = comment_item.get("commentId")
+    comment_id_raw = comment_item.get("commentId")
+    # 将 comment_id 转换为整数，因为数据库字段是 BigInteger 类型
+    # 如果是字符串类型的数字，转换为 int；如果已经是 int，保持不变
+    try:
+        comment_id = int(comment_id_raw) if comment_id_raw is not None else None
+    except (ValueError, TypeError):
+        utils.logger.warning(
+            f"[store.kuaishou.update_ks_video_comment] 无法将 comment_id 转换为整数: {comment_id_raw}, 类型: {type(comment_id_raw)}"
+        )
+        comment_id = comment_id_raw
+    
     save_comment_item = {
         "comment_id": comment_id,
         "create_time": comment_item.get("timestamp"),
